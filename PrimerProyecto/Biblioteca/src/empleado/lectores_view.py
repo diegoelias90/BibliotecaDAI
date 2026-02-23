@@ -1,11 +1,12 @@
 import flet as ft
-import empleado.lectores as lectores 
+import empleado.lectores as lectores
 from empleado.lectores import (
     obtener_lectores, agregarLector, obtener_lector_por_id,
     actualizar_lector, eliminar_lector_seguro, seleccionar_lector,
 )
 
 def lectores_tab(page: ft.Page) -> ft.Control:
+    # Construye la pestaña de lectores con formulario, tabla y acciones de agregar/eliminar.
     txt_nombre = ft.TextField(label="Nombre Completo", width=300)
     txt_carnet = ft.TextField(label="Carnet / DUI", width=300)
     txt_telefono = ft.TextField(label="Teléfono", width=300)
@@ -26,11 +27,13 @@ def lectores_tab(page: ft.Page) -> ft.Control:
     )
 
     def snack(msg: str):
+        # Muestra mensajes rápidos en pantalla usando SnackBar.
         page.snack_bar = ft.SnackBar(ft.Text(msg))
         page.snack_bar.open = True
         page.update()
 
     def limpiar_form():
+        # Limpia los campos del formulario y reinicia el lector seleccionado.
         txt_nombre.value = ""
         txt_carnet.value = ""
         txt_telefono.value = ""
@@ -39,6 +42,7 @@ def lectores_tab(page: ft.Page) -> ft.Control:
         page.update()
 
     def refrescar_tabla():
+        # Recarga la tabla desde la BD y permite seleccionar una fila para cargar sus datos al formulario.
         tabla.rows.clear()
         data = obtener_lectores() or []
         if not data:
@@ -48,7 +52,7 @@ def lectores_tab(page: ft.Page) -> ft.Control:
         info.value = ""
         for row in data:
             rid = row["id"]
-            # IMPORTANTE: Definir rid=rid dentro del on_select para no perder la referencia
+
             def on_select(e, rid=rid):
                 seleccionar_lector(rid)
                 lector = obtener_lector_por_id(rid)
@@ -69,12 +73,14 @@ def lectores_tab(page: ft.Page) -> ft.Control:
         page.update()
 
     def btn_agregar(e):
+        # Agrega un lector con los datos del formulario, limpia y actualiza la tabla.
         agregarLector(txt_nombre.value, txt_carnet.value, txt_telefono.value, txt_correo.value)
         snack("Registrado")
         limpiar_form()
         refrescar_tabla()
 
     def btn_eliminar(e):
+        # Elimina el lector seleccionado de forma segura y actualiza la interfaz.
         if lectores.lector_id_seleccionado is None:
             snack("Selecciona uno de la tabla")
             return

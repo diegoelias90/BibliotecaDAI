@@ -18,11 +18,13 @@ from admin.prestamos import (
 
 
 def prestamos_tab(page: ft.Page) -> ft.Control:
+    #Es la cosa que se muestra debajo de las tablas cuando se manda un mensaje
     def snack(msg: str):
         page.snack_bar = ft.SnackBar(ft.Text(str(msg)))
         page.snack_bar.open = True
         page.update()
 
+    #Convierte el dato del tctfecha, que si se mete y no es del tipo normal
     def parse_fecha(v):
         if v is None:
             return None
@@ -47,12 +49,9 @@ def prestamos_tab(page: ft.Page) -> ft.Control:
             except Exception:
                 return None
 
-    # ==========================================================
-    # Gráfica
-    # ==========================================================
+    
+    #Aquí está toda la lógica de la tabla, empezando por el nombre y las configuraciones de la imagen que saldrá cómo gráfica
     txt_info_grafica = ft.Text("", selectable=False)
-
-    # ✅ Flet 0.80.5: sin src_base64 en constructor
     img_grafica = ft.Image(
         "",
         visible=False,
@@ -60,11 +59,13 @@ def prestamos_tab(page: ft.Page) -> ft.Control:
         height=380,
     )
 
+    #Este es el contenedor de la gráfica
     contenedor_grafica = ft.Column(
         controls=[txt_info_grafica, img_grafica],
         spacing=8,
     )
 
+    #Y el evento para ver la gráfica
     def ver_grafica(e):
         data = obtener_prestamos() or []
 

@@ -1,7 +1,8 @@
 import mariadb as mdb
-from functions.database.conexion import db_config
+from functions.database.conexion import db_config  # Configuración de conexión a MariaDB
 
 def get_connection():
+    # Crea una conexión a la BD y devuelve None si falla.
     try:
         return mdb.connect(**db_config)
     except mdb.Error as error:
@@ -9,12 +10,14 @@ def get_connection():
         return None
 
 def registrar_prestamo(lector_id, libro_id, usuario_id, fecha_vence):
+    # Registra un préstamo, valida stock y descuenta una unidad del libro.
     try:
         conn = get_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT stock FROM libros WHERE id = %s", (int(libro_id),))
         row = cursor.fetchone()
-        if not row or row[0] <= 0: return False, "Sin stock"
+        if not row or row[0] <= 0:
+            return False, "Sin stock"
 
         query = """
             INSERT INTO prestamos (lector_id, libro_id, usuario_sistema_id, fecha_prestamo, fecha_devolucion_esperada, devuelto) 
@@ -25,10 +28,12 @@ def registrar_prestamo(lector_id, libro_id, usuario_id, fecha_vence):
         conn.commit()
         cursor.close()
         conn.close()
-        return True, "Préstamo registrado ✅"
-    except mdb.Error as err: return False, str(err)
+        return True, "Préstamo registrado"
+    except mdb.Error as err:
+        return False, str(err)
 
 def registrar_devolucion(prestamo_id, libro_id):
+    # Marca un préstamo como devuelto, registra la fecha real y repone el stock.
     try:
         conn = get_connection()
         cursor = conn.cursor()
@@ -37,14 +42,15 @@ def registrar_devolucion(prestamo_id, libro_id):
         conn.commit()
         cursor.close()
         conn.close()
-        return True, "Devuelto ✅"
-    except mdb.Error as err: return False, str(err)
+        return True, "Devuelto"
+    except mdb.Error as err:
+        return False, str(err)
 
 def obtener_prestamos_activos(busqueda=""):
+    # Devuelve préstamos no devueltos filtrando por nombre del lector o título del libro.
     try:
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
-        # SQL con buscador: busca por nombre del lector o titulo del libro
         query = """
             SELECT p.id, l.nombre as lector, b.titulo as libro, p.fecha_devolucion_esperada, p.libro_id
             FROM prestamos p
@@ -57,4 +63,5 @@ def obtener_prestamos_activos(busqueda=""):
         cursor.close()
         conn.close()
         return res
-    except mdb.Error: return []
+    except mdb.Error:
+        return []

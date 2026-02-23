@@ -6,11 +6,11 @@ prestamo_id_seleccionado = None
 
 
 def seleccionar_prestamo(pid):
-    """Permite pid=None para limpiar selección."""
+    #Esto es para la selección del prestamos, cuando se ve en la tabla 
     global prestamo_id_seleccionado
     prestamo_id_seleccionado = pid
 
-
+#Conexión
 def get_connection():
     try:
         return mdb.connect(**db_config)
@@ -20,7 +20,6 @@ def get_connection():
 
 
 def obtener_prestamos():
-    """Lista préstamos con nombres (lector, libro, usuario)."""
     conn = get_connection()
     if not conn:
         return []
@@ -46,6 +45,7 @@ def obtener_prestamos():
             JOIN usuarios_sistema u ON u.id = p.usuario_sistema_id
             ORDER BY p.id DESC
         """)
+        #devuelve los datos
         return cursor.fetchall()
     except mdb.Error as e:
         print("Error MariaDB (obtener_prestamos):", e)
@@ -71,6 +71,7 @@ def obtener_prestamo_por_id(pid):
             FROM prestamos
             WHERE id = %s
         """, (pid,))
+        #Lo que hace es que te da una sola fila de la query que se mandó    
         return cursor.fetchone()
     except mdb.Error as e:
         print("Error MariaDB (obtener_prestamo_por_id):", e)
@@ -92,12 +93,13 @@ def crear_prestamo(lector_id, libro_id, usuario_sistema_id, fecha_devolucion_esp
     """
     # validaciones rápidas
     try:
+        #Esto es por las selecciones que se mandan y verificar que sean correctos
         lector_id = int(lector_id)
         libro_id = int(libro_id)
         usuario_sistema_id = int(usuario_sistema_id)
     except Exception:
         return False, "IDs inválidos (deben ser números)."
-
+    
     if not fecha_devolucion_esperada:
         return False, "Fecha de devolución esperada requerida."
 
@@ -111,9 +113,10 @@ def crear_prestamo(lector_id, libro_id, usuario_sistema_id, fecha_devolucion_esp
         # validar lector
         cursor.execute("SELECT 1 FROM lectores WHERE id=%s", (lector_id,))
         if not cursor.fetchone():
+            #Por si no existe el lector
             return False, "Lector no existe"
 
-        # validar usuario_sistema
+        # validar usuario
         cursor.execute("SELECT 1 FROM usuarios_sistema WHERE id=%s", (usuario_sistema_id,))
         if not cursor.fetchone():
             return False, "Usuario del sistema no existe"
@@ -127,8 +130,6 @@ def crear_prestamo(lector_id, libro_id, usuario_sistema_id, fecha_devolucion_esp
         stock = int(r[0] or 0)
         if stock <= 0:
             return False, "No hay stock disponible"
-
-        # ✅ evitar duplicado activo (mismo lector+libro sin devolver)
         cursor.execute("""
             SELECT COUNT(*)
             FROM prestamos
@@ -147,7 +148,7 @@ def crear_prestamo(lector_id, libro_id, usuario_sistema_id, fecha_devolucion_esp
         cursor.execute("UPDATE libros SET stock = stock - 1 WHERE id=%s", (libro_id,))
 
         conn.commit()
-        return True, "Préstamo creado ✅"
+        return True, "Préstamo creado"
 
     except mdb.Error as e:
         print("Error MariaDB (crear_prestamo):", e)
@@ -197,7 +198,7 @@ def marcar_devuelto(pid):
 
         cursor.execute("UPDATE libros SET stock = stock + 1 WHERE id=%s", (libro_id,))
         conn.commit()
-        return True, "Devuelto ✅"
+        return True, "Devuelto"
 
     except mdb.Error as e:
         print("Error MariaDB (marcar_devuelto):", e)
@@ -243,7 +244,7 @@ def eliminar_prestamo(pid):
             cursor.execute("UPDATE libros SET stock = stock + 1 WHERE id=%s", (libro_id,))
 
         conn.commit()
-        return True, "Préstamo eliminado ✅"
+        return True, "Préstamo eliminado"
 
     except mdb.Error as e:
         print("Error MariaDB (eliminar_prestamo):", e)
@@ -261,6 +262,7 @@ def eliminar_prestamo(pid):
         conn.close()
 
 
+#BIennn
 def listar_lectores():
     conn = get_connection()
     if not conn:

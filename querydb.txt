@@ -1,0 +1,126 @@
+CREATE DATABASE BibliotecaDB;
+
+
+-- 2. Tabla USUARIOS DEL SISTEMA (Staff)
+-- Se usa BOOLEAN para el rol: 
+-- 1 (TRUE) = Administrador
+-- 0 (FALSE) = Empleado normal
+CREATE TABLE usuarios_sistema (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(100) NOT NULL,
+    es_admin BOOLEAN DEFAULT 0 
+);
+
+-- 3. Tabla LECTORES (Estudiantes/Clientes)
+-- Separados porque NO tienen contraseña ni entran al sistema
+CREATE TABLE lectores (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    carnet VARCHAR(20) UNIQUE NOT NULL, -- DUI o Matrícula
+    telefono VARCHAR(15),
+    correo VARCHAR(100)
+);
+
+-- 4. Tabla CATEGORÍAS (Para organizar libros)
+CREATE TABLE categorias (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL
+);
+
+-- 5. Tabla LIBROS
+CREATE TABLE libros (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    titulo VARCHAR(200) NOT NULL,
+    autor VARCHAR(150) NOT NULL,
+    categoria_id INT,
+    stock INT DEFAULT 0, -- Cantidad disponible
+    FOREIGN KEY (categoria_id) REFERENCES categorias(id) ON DELETE SET NULL
+);
+
+-- 6. Tabla PRÉSTAMOS
+-- Relaciona Lector + Libro + Quién lo prestó
+CREATE TABLE prestamos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    lector_id INT NOT NULL,
+    libro_id INT NOT NULL,
+    usuario_sistema_id INT NOT NULL, -- El empleado que registró el préstamo
+    fecha_prestamo DATE DEFAULT CURRENT_TIMESTAMP,
+    fecha_devolucion_esperada DATE NOT NULL,
+    fecha_devolucion_real DATE NULL, 
+    devuelto BOOLEAN DEFAULT 0, -- 0 = No devuelto (Activo), 1 = Devuelto
+    
+    FOREIGN KEY (lector_id) REFERENCES lectores(id),
+    FOREIGN KEY (libro_id) REFERENCES libros(id),
+    FOREIGN KEY (usuario_sistema_id) REFERENCES usuarios_sistema(id)
+);
+
+
+
+-- Usuarios: 1 Admin, 1 Empleado
+INSERT INTO usuarios_sistema (username, password, es_admin) VALUES 
+('admin', '1234', 1),
+('empleado', '1234', 0);
+
+-- Categorías
+INSERT INTO categorias (nombre) VALUES ('Programación'), ('Historia'), ('Matemáticas');
+
+-- Libros
+INSERT INTO libros (titulo, autor, categoria_id, stock) VALUES 
+('Curso de Python', 'Guido van Rossum', 1, 5),
+('Algebra de Baldor', 'Aurelio Baldor', 3, 10);
+
+-- Lectores
+INSERT INTO lectores (nombre, carnet, telefono) VALUES 
+('Juan Perez', '202401', '7000-0001');
+
+use bibliotecadb;
+INSERT INTO categorias (nombre) VALUES
+('Ciencia Ficción'),
+('Literatura'),
+('Filosofía'),
+('Tecnología'),
+('Biografías'),
+('Arte'),
+('Economía'),
+('Psicología');
+
+INSERT INTO libros (titulo, autor, categoria_id, stock) VALUES
+('1984', 'George Orwell', 2, 7),
+('Fundación', 'Isaac Asimov', 1, 4),
+('El arte de la guerra', 'Sun Tzu', 3, 6),
+('Clean Code', 'Robert C. Martin', 4, 3),
+('Steve Jobs', 'Walter Isaacson', 5, 5),
+('La mente humana', 'Steven Pinker', 8, 2),
+('Historia del arte', 'E.H. Gombrich', 6, 4),
+('Economía en una lección', 'Henry Hazlitt', 7, 3),
+('Don Quijote de la Mancha', 'Miguel de Cervantes', 2, 8),
+('Dune', 'Frank Herbert', 1, 6),
+('Python avanzado', 'Luciano Ramalho', 4, 5),
+('Introducción a la lógica', 'Irving Copi', 3, 7);
+
+INSERT INTO lectores (nombre, carnet, telefono, correo) VALUES
+('Ana Martínez', '202410', '7000-0010', 'ana@email.com'),
+('Carlos López', '202411', '7000-0011', 'carlos@email.com'),
+('María Gómez', '202412', '7000-0012', 'maria@email.com'),
+('José Rivera', '202413', '7000-0013', 'jose@email.com'),
+('Lucía Torres', '202414', '7000-0014', 'lucia@email.com'),
+('Pedro Sánchez', '202415', '7000-0015', 'pedro@email.com'),
+('Sofía Hernández', '202416', '7000-0016', 'sofia@email.com'),
+('Daniel Flores', '202417', '7000-0017', 'daniel@email.com'),
+('Valeria Cruz', '202418', '7000-0018', 'valeria@email.com');
+
+INSERT INTO prestamos 
+(lector_id, libro_id, usuario_sistema_id, fecha_prestamo, fecha_devolucion_esperada, fecha_devolucion_real, devuelto) VALUES
+(1, 1, 1, '2026-01-01', '2026-01-10', '2026-01-09', 1),
+(2, 2, 1, '2026-01-03', '2026-01-12', NULL, 0),
+(3, 3, 2, '2026-01-05', '2026-01-15', '2026-01-14', 1),
+(4, 4, 2, '2026-01-07', '2026-01-17', NULL, 0),
+(5, 5, 1, '2026-01-10', '2026-01-20', '2026-01-18', 1),
+(6, 6, 2, '2026-01-12', '2026-01-22', NULL, 0),
+(7, 7, 1, '2026-01-15', '2026-01-25', '2026-01-24', 1),
+(8, 8, 2, '2026-01-18', '2026-01-28', NULL, 0),
+(9, 9, 1, '2026-01-20', '2026-01-30', '2026-01-29', 1),
+(1, 10, 2, '2026-01-22', '2026-02-01', NULL, 0),
+(2, 11, 1, '2026-01-25', '2026-02-04', '2026-02-03', 1),
+(3, 12, 2, '2026-01-28', '2026-02-07', NULL, 0);
